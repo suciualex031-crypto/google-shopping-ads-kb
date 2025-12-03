@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Shopping Ads - Knowledge Base Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* COMPACT SIDEBAR */
+        .sidebar {
+            width: 80px;
+            background: rgba(20, 30, 50, 0.95);
+            border-right: 2px solid #4a90e2;
+            overflow-y: auto;
+            padding: 15px 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar-header {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #4a90e2;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .search-box {
+            display: none; /* Hidden in compact mode, activated on hover */
+        }
+
+        .module-item {
+            width: 60px;
+            height: 60px;
+            margin: 8px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            position: relative;
+        }
+
+        .module-item:hover {
+            background: rgba(74, 144, 226, 0.2);
+            border-color: #4a90e2;
+            transform: scale(1.1);
+        }
+
+        .module-item.active {
+            background: rgba(74, 144, 226, 0.3);
+            border-color: #4a90e2;
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.5);
+        }
+
+        .module-tooltip {
+            position: absolute;
+            left: 75px;
+            background: rgba(20, 30, 50, 0.95);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #4a90e2;
+            white-space: nowrap;
+            font-size: 13px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .module-item:hover .module-tooltip {
+            opacity: 1;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #1a2a4a 0%, #2a3a5a 100%);
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(20, 30, 50, 0.8);
+            border-bottom: 2px solid #4a90e2;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h2 {
+            font-size: 28px;
+            color: #4a90e2;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(74, 144, 226, 0.3);
+            border: 1px solid #4a90e2;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(74, 144, 226, 0.5);
+        }
+
+        .search-container {
+            padding: 15px 30px;
+            background: rgba(20, 30, 50, 0.5);
+            border-bottom: 1px solid #4a90e2;
+        }
+
+        .search-box-main {
+            padding: 10px 15px;
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid #4a90e2;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .search-box-main::placeholder {
+            color: #666;
+        }
+
+        .content {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            background: rgba(30, 50, 80, 0.5);
+            border-left: 4px solid #4a90e2;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .section h3 {
+            color: #4a90e2;
+            margin-bottom: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .section h3:hover {
+            color: #6ca5ff;
+        }
+
+        .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .section.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .concepts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .concept {
+            background: rgba(74, 144, 226, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            font-size: 14px;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .concept:hover {
+            background: rgba(74, 144, 226, 0.2);
+            border-color: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        .concept-hidden {
+            display: none;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4a90e2;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #357abd;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state p {
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .module-item {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            .concepts {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- COMPACT SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                📚
+            </div>
+            <div id="modulesList"></div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h2 id="moduleTitle">Welcome</h2>
+                <div class="header-controls">
+                    <button class="btn btn-secondary" onclick="toggleAllSections()">Expand/Collapse</button>
+                    <button class="btn" onclick="downloadNotes()">📥 Export</button>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <input type="text" class="search-box-main" id="searchBox" placeholder="🔍 Caută concepte în toate modulele...">
+            </div>
+
+            <div class="content">
+                <div id="contentArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATA STRUCTURE
+        const modules = [
+            {
+                id: 1,
+                title: "Grow Your Retail Business",
+                icon: "🛍️",
+                sections: [
+                    {
+                        title: "Business Goals",
+                        concepts: [
+                            "Online Sales - traffic pe site, conversii online",
+                            "Offline Sales - atragere clienți în magazine fizice",
+                            "Omnichannel - combinație online + offline, maximă flexibilitate"
+                        ]
+                    },
+                    {
+                        title: "Retailer Essentials",
+                        concepts: [
+                            "Cunoaște scopul afacerii pentru a maximiza profitul",
+                            "Oferă experiență personalizată care îndeplinește așteptări",
+                            "Construiește relații de încredere cu cumpărătorul",
+                            "Ajută consumatorii să descopere lucruri noi",
+                            "Oferă experiență de cumpărare plăcută"
+                        ]
+                    },
+                    {
+                        title: "Key Info for Products",
+                        concepts: [
+                            "Titlu clar și descriptiv",
+                            "Preț accesibil și corect",
+                            "Imagine de calitate"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "How Shopping Ads Work",
+                icon: "📊",
+                sections: [
+                    {
+                        title: "Benefits of Shopping Ads",
+                        concepts: [
+                            "Better engagement - cumpărători interacționează cu info vizuale",
+                            "Higher conversion quality - shoppers bine informați",
+                            "Broader presence - mai mulți canale Google (Search, Display, YouTube, Maps)",
+                            "Powerful reporting - analiza competiție și performanță"
+                        ]
+                    },
+                    {
+                        title: "Campaign Management",
+                        concepts: [
+                            "Data-driven strategy - feed, inventar, performanță",
+                            "Performance Max - complet automatizat, AI-powered",
+                            "Standard Shopping - manual control, mai multă flexibilitate",
+                            "Merchant Center data - baza pentru generat automat ads"
+                        ]
+                    },
+                    {
+                        title: "Shopping Ad Types",
+                        concepts: [
+                            "Product Shopping Ads - bazate pe feed Merchant Center, standard ads",
+                            "Local Inventory Ads - produse stocate în magazine fizice apropiate"
+                        ]
+                    },
+                    {
+                        title: "Ad Placements",
+                        concepts: [
+                            "Search - top rezultate căutare, deasupra text ads",
+                            "Display - Google Display Network, website-uri și app-uri",
+                            "Shopping Tab - pagina dedicată Google Shopping",
+                            "YouTube - videoclipuri și YouTube Shopping Tab",
+                            "Maps - alături de rezultate locale"
+                        ]
+                    },
+                    {
+                        title: "Pricing Model",
+                        concepts: [
+                            "CPC (Cost Per Click) - plătești doar pentru clicuri",
+                            "Ad Auction - plătești cât necesar să depășești competitorul",
+                            "De obicei plătești mai puțin decât max CPC",
+                            "Google decide poziție pe baza: bid + relevanță + calitate"
+                        ]
+                    },
+                    {
+                        title: "Paid vs Free Listings",
+                        concepts: [
+                            "Paid Product Listings - Shopping Ads gestionat prin PMax și Standard",
+                            "Detalii performanță, control prioritate, taxa CPC",
+                            "Free Listings - afișări gratuite în Google Shopping",
+                            "Nu intră în licitație, nu consumă buget"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Shopping Campaign Types",
+                icon: "⚡",
+                sections: [
+                    {
+                        title: "Standard Shopping",
+                        concepts: [
+                            "Scop - control manual, structură flexibilă",
+                            "Baza - feed produse, fără cuvinte cheie",
+                            "Organizare - product groups pe categorie, brand, ID",
+                            "Bidding - Manual CPC, Enhanced CPC, Maximize Clicks, Target ROAS",
+                            "Avantaj - control bun pe oferte și structură",
+                            "Limitare - mai multă muncă manuală, nu toate rețelele automat"
+                        ]
+                    },
+                    {
+                        title: "Smart Shopping",
+                        concepts: [
+                            "Scop - automatizare puternică, mai puțin control",
+                            "Combină - Shopping Ads + Dynamic Remarketing (Display, YouTube, Gmail)",
+                            "Bidding automat - Maximize Conversion Value cu Target ROAS",
+                            "ML decides - unde apară, ce produs, la ce bid",
+                            "Prioritate - ia traficul cel mai valoros dacă ai mai multe campanii",
+                            "Context - evoluție către PMax, important din perspectivă istorică"
+                        ]
+                    },
+                    {
+                        title: "Performance Max",
+                        concepts: [
+                            "Scop - all-in-one solution, maxim automatizat",
+                            "Canale - Search, Shopping, Display, YouTube, Discover, Gmail, Maps",
+                            "Obiective - vânzări online, lead-uri, acțiuni offline",
+                            "AI finds - cel mai bine asset-uri, audiențe, placement-uri",
+                            "Evoluție - succesorul Smart Shopping, powered by Google AI",
+                            "Control - asset groups, audience signals, bid strategies"
+                        ]
+                    },
+                    {
+                        title: "When to Choose",
+                        concepts: [
+                            "Standard - vrei control manual pe oferte și structură",
+                            "Standard - ai nevoie să analizezi clar pe categorie/produs",
+                            "Smart - (trecut) vrei automatizare + remarketing integrat",
+                            "Smart - ok cu mai puțină transparență, focus vânzări/ROAS",
+                            "PMax - vrei maxim automatizare și omnichannel",
+                            "PMax - ai feed produs și vrei AI să optimizeze totul"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Performance Max & Setup",
+                icon: "🚀",
+                sections: [
+                    {
+                        title: "Key Requirements",
+                        concepts: [
+                            "Feed corect și complet - titlu, imagine, preț, stoc, categorie",
+                            "Merchant Center aprobat - verificat, fără erori, produse valide",
+                            "Politici Google - produse permise, info corecte, pagini funcționale",
+                            "Date actualizate - preț/stoc feed trebuie sincronizate cu site",
+                            "Site bun - mobile-friendly, rapid, clar, ușor navigabil"
+                        ]
+                    },
+                    {
+                        title: "Google Merchant Center",
+                        concepts: [
+                            "Ce este - platforma Google pentru gestionarea datelor produs",
+                            "Folosit pentru - Shopping Ads, Free listings, Local inventory ads",
+                            "Stochează - valideaza date produse pe care Ads le folosește",
+                            "Setup - feed produse, informații magazin, tax & shipping"
+                        ]
+                    },
+                    {
+                        title: "Product Feed",
+                        concepts: [
+                            "Conține - ID, titlu, descriere, link produs, link imagine",
+                            "Atribute - preț, disponibilitate, brand, categorie, GTIN",
+                            "Format - fișier structurat cu date complete și corecte",
+                            "Actualizare - trebuie sincronizat constant cu stoc real"
+                        ]
+                    },
+                    {
+                        title: "Bidding Strategies for PMax",
+                        concepts: [
+                            "Maximize Clicks - maximizează trafic în buget",
+                            "Target ROAS - menține ROAS specific (revenue/cost)",
+                            "Maximize Conversion Value - cel mai mare revenue în buget",
+                            "Enhanced CPC - ajustare manuală + algoritm Google",
+                            "Smart Bidding - Google optimizează real-time pe intent"
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Checklists & Quick Reference",
+                icon: "✅",
+                sections: [
+                    {
+                        title: "Pre-Launch Checklist",
+                        concepts: [
+                            "☐ Feed de produse complet și validat",
+                            "☐ Merchant Center account creat și verificat",
+                            "☐ Site mobile-friendly și rapid",
+                            "☐ Politici Google respectate",
+                            "☐ Detalii livrare/taxe configurate",
+                            "☐ HTTPS activ pe site",
+                            "☐ Google Analytics integrat"
+                        ]
+                    },
+                    {
+                        title: "Campaign Setup Checklist",
+                        concepts: [
+                            "☐ Alege tip campanie - Standard sau Performance Max",
+                            "☐ Setează țări și limbi",
+                            "☐ Configurează opțiuni product groups (Standard)",
+                            "☐ Selectează bidding strategy - manual, target ROAS etc.",
+                            "☐ Setează buget zilnic",
+                            "☐ Adaugă exclusiuni produse dacă e cazul",
+                            "☐ Setează notificări și monitoring"
+                        ]
+                    },
+                    {
+                        title: "Optimization Tips",
+                        concepts: [
+                            "Analizează performance per categorie/produs",
+                            "A/B testează diferite strategii de bidding",
+                            "Actualizează feed-ul cu sezonalitate",
+                            "Monitorizează ROAS vs CPA monthly",
+                            "Excluzion produse cu performanță slabă",
+                            "Folosește audience signals în PMax",
+                            "Revizie politici Google regulat"
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        let currentModule = null;
+
+        function renderModules() {
+            const list = document.getElementById('modulesList');
+            list.innerHTML = modules.map(m => `
+                <div class="module-item ${m.id === 1 ? 'active' : ''}" onclick="selectModule(${m.id})" data-module="${m.id}">
+                    ${m.icon}
+                    <div class="module-tooltip">${m.title}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectModule(id) {
+            currentModule = modules.find(m => m.id === id);
+            document.querySelectorAll('.module-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-module="${id}"]`).classList.add('active');
+            renderContent();
+            document.getElementById('moduleTitle').textContent = currentModule.title;
+        }
+
+        function renderContent() {
+            const content = document.getElementById('contentArea');
+            if (!currentModule) return;
+
+            content.innerHTML = currentModule.sections.map(section => `
+                <div class="section">
+                    <h3 onclick="toggleSection(event)">
+                        ${section.title}
+                        <span class="toggle-icon">▼</span>
+                    </h3>
+                    <div class="concepts">
+                        ${section.concepts.map(c => `
+                            <div class="concept">${c}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleSection(e) {
+            const section = e.target.closest('.section');
+            section.classList.toggle('collapsed');
+            const concepts = section.querySelector('.concepts');
+            concepts.classList.toggle('concept-hidden');
+        }
+
+        function toggleAllSections() {
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.toggle('collapsed');
+                s.querySelector('.concepts').classList.toggle('concept-hidden');
+            });
+        }
+
+        function downloadNotes() {
+            let text = "GOOGLE SHOPPING ADS - KNOWLEDGE BASE\n\n";
+            modules.forEach(m => {
+                text += `\n${m.title}\n${'='.repeat(50)}\n`;
+                m.sections.forEach(s => {
+                    text += `\n${s.title}:\n`;
+                    s.concepts.forEach(c => text += `  • ${c}\n`);
+                });
+            });
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Google_Shopping_Ads_KB.txt';
+            a.click();
+        }
+
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            if (query === '') {
+                // Reset view
+                document.querySelectorAll('.concept').forEach(concept => {
+                    concept.style.display = 'block';
+                });
+                return;
+            }
+
+            document.querySelectorAll('.concept').forEach(concept => {
+                const text = concept.textContent.toLowerCase();
+                concept.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        });
+
+        // INIT
+        renderModules();
+        currentModule = modules[0];
+        renderContent();
+    </script>
+</body>
+</html>
